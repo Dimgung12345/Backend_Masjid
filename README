@@ -1,0 +1,12 @@
+- Masukkan file ke vps
+- Opsional Jika Zip Unzip Dulu
+- buka file lalu pada root project buka terminal
+- di terminal jalankan go mod download
+- go build -o bin/backend_masjid ./cmd/server // -o bin/backend_masjid tuh hanya opsional
+- go build -o bin/migrate ./cmd/migrate // -o bin/migrate tuh hanya opsional
+- CREATE Database Postgre
+- Jalankan di query tool postgre CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+- Jalankan Migrate mengikuti -o yang ditentukan saat build
+- Jalankan sistem dengan - o yang ditentukan saat build
+
+lalu lakuakn migrasi data yang mau langsung ditampilin kayak hadist
