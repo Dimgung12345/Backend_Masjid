@@ -8,6 +8,7 @@ import (
     "github.com/gin-gonic/gin"
 )
 
+
 type BannerController struct {
     service *services.BannerService
 }
@@ -24,6 +25,7 @@ func (c *BannerController) GetAll(ctx *gin.Context) {
         return
     }
 
+    // service sudah caching
     banners, err := c.service.GetAllByClient(clientID)
     if err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -38,7 +40,6 @@ func (c *BannerController) GetAll(ctx *gin.Context) {
     ctx.JSON(http.StatusOK, banners)
 }
 
-// Tenant isi/ganti banner di slot tertentu
 func (c *BannerController) Update(ctx *gin.Context) {
     clientID := ctx.GetString("client_id")
     if clientID == "" {
@@ -60,13 +61,12 @@ func (c *BannerController) Update(ctx *gin.Context) {
         return
     }
 
-    banner, err := c.service.GetByID(bannerID) // pakai int64, sesuai service
+    banner, err := c.service.GetByID(bannerID)
     if err != nil {
         ctx.JSON(http.StatusNotFound, gin.H{"error": "banner not found"})
         return
     }
 
-    // validasi kepemilikan banner
     if banner.ClientID.String() != clientID {
         ctx.JSON(http.StatusForbidden, gin.H{"error": "not your banner"})
         return

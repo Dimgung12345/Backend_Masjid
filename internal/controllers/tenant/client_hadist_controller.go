@@ -95,3 +95,28 @@ func (c *ClientHadistController) Enable(ctx *gin.Context) {
 
     ctx.JSON(http.StatusOK, gin.H{"message": "hadist enabled"})
 }
+
+func (c *ClientHadistController) Search(ctx *gin.Context) {
+    clientID := ctx.GetString("client_id")
+    if clientID == "" {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "missing client_id claim"})
+        return
+    }
+
+    keyword := ctx.Query("keyword")
+    if keyword == "" {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "keyword is required"})
+        return
+    }
+
+    limit, _ := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
+    offset, _ := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
+
+    hadists, err := c.service.SearchByKeyword(clientID, keyword, limit, offset)
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    ctx.JSON(http.StatusOK, hadists)
+}

@@ -104,6 +104,7 @@ func SetupRouter(
         tenantGroup.GET("/hadists", tenantClientHadist.GetAll)
         tenantGroup.PUT("/hadists/:id/disable", tenantClientHadist.Disable)
         tenantGroup.PUT("/hadists/:id/enable", tenantClientHadist.Enable)
+        tenantGroup.GET("/hadists/search", tenantClientHadist.Search)
 
         tenantJadwal := tenant.NewJadwalController(jadwalService)
         tenantGroup.GET("/jadwal", tenantJadwal.GetAll)

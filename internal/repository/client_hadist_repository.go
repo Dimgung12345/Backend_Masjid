@@ -26,3 +26,11 @@ func (r *ClientHadistRepository) Disable(clientHadist *models.ClientHadist) erro
 func (r *ClientHadistRepository) Enable(clientID string, hadistID uint) error {
     return r.db.Where("client_id = ? AND hadist_id = ?", clientID, hadistID).Delete(&models.ClientHadist{}).Error
 }
+
+func (r *HadistRepository) Search(keyword string, limit, offset int) ([]models.Hadist, error) {
+    var hadists []models.Hadist
+    like := "%" + keyword + "%"
+    err := r.db.Where("konten LIKE ? OR riwayat LIKE ? OR kitab LIKE ?", like, like, like).
+        Limit(limit).Offset(offset).Find(&hadists).Error
+    return hadists, err
+}

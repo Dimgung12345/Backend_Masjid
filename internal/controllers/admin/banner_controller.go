@@ -96,10 +96,23 @@ func (c *BannerController) Update(ctx *gin.Context) {
 
 // DELETE /admin/banners/:bannerId
 func (c *BannerController) Delete(ctx *gin.Context) {
-    bannerID, _ := strconv.ParseInt(ctx.Param("bannerId"), 10, 64)
-    if err := c.service.Delete(bannerID); err != nil {
+    bannerID, err := strconv.ParseInt(ctx.Param("bannerId"), 10, 64)
+    if err != nil || bannerID <= 0 {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid banner id"})
+        return
+    }
+
+    // ambil clientID dari query atau body (tergantung desain)
+    clientID := ctx.Query("client_id")
+    if clientID == "" {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing client_id"})
+        return
+    }
+
+    if err := c.service.Delete(bannerID, clientID); err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
-    ctx.JSON(http.StatusOK, gin.H{"message": "deleted"})
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "banner deleted"})
 }

@@ -4,13 +4,13 @@ import (
     "time"
 
     "github.com/gin-contrib/cors"
-    // "github.com/gin-gonic/gin"
 
     "backend_masjid/internal/config"
     "backend_masjid/internal/db"
     "backend_masjid/internal/router"
     "backend_masjid/internal/repository"
     "backend_masjid/internal/services"
+    "backend_masjid/internal/cache"
 )
 
 func main() {
@@ -32,23 +32,26 @@ func main() {
     dkmRepo := repository.NewDkmUserRepository(db.DB)
     bannerRepo := repository.NewBannerRepository(db.DB)
 
-    // 4. Init services
+    // 4. Init cache manager (misalnya TTL 24 jam)
+    cacheManager := cache.NewCacheManager(24 * time.Hour)
+
+    // 5. Init services dengan cache
     hadistService := services.NewHadistService(hadistRepo)
-    clientHadistService := services.NewClientHadistService(clientHadistRepo, hadistRepo)
+    clientHadistService := services.NewClientHadistService(clientHadistRepo, hadistRepo, cacheManager)
     jadwalService := services.NewJadwalService(jadwalRepo)
     kalenderService := services.NewKalenderService(kalenderRepo)
     hariBesarService := services.NewHariBesarService(hariBesarRepo)
-    masterClientService := services.NewMasterClientService(masterClientRepo)
+    masterClientService := services.NewMasterClientService(masterClientRepo, cacheManager)
     dkmUserService := services.NewDkmUserService(dkmUserRepo)
     authService := services.NewAuthService(adminRepo, dkmRepo)
-    bannerService := services.NewBannerService(bannerRepo)
+    bannerService := services.NewBannerService(bannerRepo, cacheManager)
 
-    // 5. Setup router
+    // 6. Setup router
     r := router.SetupRouter(
         hadistService,
         jadwalService,
         kalenderService,
-        hariBesarService,
+        hariBesarService,       
         masterClientService,
         dkmUserService,
         authService,
@@ -66,10 +69,8 @@ func main() {
         MaxAge:           12 * time.Hour,
     }))
 
-
     r.Static("/storage", "./storage")
 
-    
-    // 6. Run server
+    // 7. Run server
     r.Run(":" + config.Cfg.AppPort)
 }
