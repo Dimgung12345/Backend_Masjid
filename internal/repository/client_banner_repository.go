@@ -18,6 +18,10 @@ func (r *BannerRepository) Create(banner *models.ClientBanner) error {
     return r.db.Create(banner).Error
 }
 
+func (r *BannerRepository) BulkInsert(banners []models.ClientBanner) error {
+    return r.db.Create(&banners).Error
+}
+
 // Read All by ClientID
 func (r *BannerRepository) FindAllByClient(clientID string) ([]models.ClientBanner, error) {
     var banners []models.ClientBanner

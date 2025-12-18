@@ -24,33 +24,68 @@ func (c *BannerController) Create(ctx *gin.Context) {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": "client_id required"})
         return
     }
+    clientUUID := uuid.MustParse(clientID)
 
-    // Ambil file banner dari form-data
-    file, err := ctx.FormFile("banner")
+    form, err := ctx.MultipartForm()
     if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid multipart form"})
+        return
+    }
+
+    files := form.File["banner"]
+    if len(files) == 0 {
         ctx.JSON(http.StatusBadRequest, gin.H{"error": "banner file required"})
         return
     }
 
-    // Simpan file ke storage
-    path, err := services.SaveFile(ctx, file)
-    if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    // ✅ Single create
+    if len(files) == 1 {
+        path, err := services.SaveFile(ctx, files[0])
+        if err != nil {
+            ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
+
+        banner := models.ClientBanner{
+            ClientID: clientUUID,
+            Path:     path,
+        }
+
+        if err := c.service.Create(&banner); err != nil {
+            ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+
+        // selalu return array agar FE konsisten
+        ctx.JSON(http.StatusCreated, []models.ClientBanner{banner})
         return
     }
 
-    // Buat record banner
-    banner := models.ClientBanner{
-        ClientID: uuid.MustParse(clientID),
-        Path:     path,
+    // ✅ Bulk create
+    if len(files) > 5 {
+        ctx.JSON(http.StatusBadRequest, gin.H{"error": "maksimal 5 banner"})
+        return
     }
 
-    if err := c.service.Create(&banner); err != nil {
+    var banners []models.ClientBanner
+    for _, file := range files {
+        path, err := services.SaveFile(ctx, file)
+        if err != nil {
+            ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
+        banners = append(banners, models.ClientBanner{
+            ClientID: clientUUID,
+            Path:     path,
+        })
+    }
+
+    if err := c.service.BulkCreate(banners); err != nil {
         ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    ctx.JSON(http.StatusCreated, banner)
+    ctx.JSON(http.StatusCreated, banners)
 }
 
 // GET /admin/banners

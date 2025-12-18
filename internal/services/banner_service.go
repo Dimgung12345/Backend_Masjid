@@ -5,6 +5,7 @@ import (
     "backend_masjid/internal/repository"
     "backend_masjid/internal/cache"
     "fmt"
+    "errors"
 )
 
 type BannerService struct {
@@ -14,6 +15,28 @@ type BannerService struct {
 
 func NewBannerService(repo *repository.BannerRepository, cacheManager *cache.CacheManager) *BannerService {
     return &BannerService{repo: repo, cacheManager: cacheManager}
+}
+
+func (s *BannerService) Create(b *models.ClientBanner) error {
+    err := s.repo.Create(b)
+    if err == nil {
+        s.cacheManager.Invalidate("banner:" + b.ClientID.String())
+    }
+    return err
+}
+
+func (s *BannerService) BulkCreate(banners []models.ClientBanner) error {
+    if len(banners) == 0 {
+        return errors.New("no banners provided")
+    }
+
+    // Insert ke DB
+    err := s.repo.BulkInsert(banners)
+    if err == nil {
+        // invalidate cache client
+        s.cacheManager.Invalidate("banner:" + banners[0].ClientID.String())
+    }
+    return err
 }
 
 func (s *BannerService) GetAllByClient(clientID string) ([]models.ClientBanner, error) {
@@ -48,14 +71,6 @@ func (s *BannerService) GetByID(id int64) (*models.ClientBanner, error) {
 
     s.cacheManager.Set(cacheKey, banner)
     return banner, nil
-}
-
-func (s *BannerService) Create(b *models.ClientBanner) error {
-    err := s.repo.Create(b)
-    if err == nil {
-        s.cacheManager.Invalidate("banner:" + b.ClientID.String())
-    }
-    return err
 }
 
 func (s *BannerService) Update(b *models.ClientBanner) error {
