@@ -58,3 +58,9 @@ func (r *HadistRepository) Exists(hadistID uint) (bool, error) {
     }
     return count > 0, nil
 }
+
+func (r *HadistRepository) CountAll() (int64, error) {
+    var count int64
+    err := r.db.Model(&models.Hadist{}).Count(&count).Error
+    return count, err
+}

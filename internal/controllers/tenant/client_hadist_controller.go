@@ -120,3 +120,20 @@ func (c *ClientHadistController) Search(ctx *gin.Context) {
 
     ctx.JSON(http.StatusOK, hadists)
 }
+
+// GET /tenant/hadists/stats
+func (c *ClientHadistController) GetStats(ctx *gin.Context) {
+    clientID := ctx.GetString("client_id")
+    if clientID == "" {
+        ctx.JSON(http.StatusUnauthorized, gin.H{"error": "missing client_id claim"})
+        return
+    }
+
+    stats, err := c.service.GetStats(clientID)
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    ctx.JSON(http.StatusOK, stats)
+}

@@ -154,3 +154,23 @@ func (s *ClientHadistService) Search(clientID, keyword string, limit, offset int
 
     return result, nil
 }
+
+func (s *ClientHadistService) GetStats(clientID string) (map[string]int64, error) {
+    total, err := s.hadistRepo.CountAll()
+    if err != nil {
+        return nil, err
+    }
+
+    disabled, err := s.repo.CountDisabledByClient(clientID)
+    if err != nil {
+        return nil, err
+    }
+
+    enabled := total - disabled
+
+    return map[string]int64{
+        "total":    total,
+        "enabled":  enabled,
+        "disabled": disabled,
+    }, nil
+}

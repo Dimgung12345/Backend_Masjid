@@ -34,3 +34,11 @@ func (r *HadistRepository) Search(keyword string, limit, offset int) ([]models.H
         Limit(limit).Offset(offset).Find(&hadists).Error
     return hadists, err
 }
+
+func (r *ClientHadistRepository) CountDisabledByClient(clientID string) (int64, error) {
+    var count int64
+    err := r.db.Model(&models.ClientHadist{}).
+        Where("client_id = ? AND disabled = ?", clientID, true).
+        Count(&count).Error
+    return count, err
+}
